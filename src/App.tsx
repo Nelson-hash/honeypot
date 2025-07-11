@@ -1,37 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Eye, AlertTriangle, Network, MapPin } from 'lucide-react';
-import { logVisitor, type VisitorLog } from './lib/supabase';
+import { collectVisitorData, type VisitorData } from './lib/ipService';
 
 function App() {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [showFinalMessage, setShowFinalMessage] = useState(false);
-  const [visitorData, setVisitorData] = useState<VisitorLog | null>(null);
+  const [visitorData, setVisitorData] = useState<VisitorData | null>(null);
   const [ipCollected, setIpCollected] = useState(false);
 
   useEffect(() => {
     // Start IP collection immediately when component mounts
-    const collectVisitorData = async () => {
+    const collectData = async () => {
       try {
-        const result = await logVisitor();
-        if (result.success && result.data) {
-          setVisitorData(result.data);
-          setIpCollected(true);
+        const result = await collectVisitorData();
+        setVisitorData(result.data);
+        setIpCollected(true);
+        
+        if (result.success) {
           console.log('✅ Visitor data collected and logged:', result.data);
         } else {
-          console.error('❌ Failed to collect visitor data:', result.error);
-          // Still set visitor data even if logging failed
-          if (result.data) {
-            setVisitorData(result.data);
-            setIpCollected(true);
-          }
+          console.warn('⚠️ Data collected but logging failed:', result.error);
         }
       } catch (error) {
         console.error('❌ Error collecting visitor data:', error);
       }
     };
 
-    collectVisitorData();
+    collectData();
   }, []);
 
   useEffect(() => {
@@ -52,7 +48,7 @@ function App() {
       }, 300);
 
       return () => clearInterval(interval);
-    }, 500);
+    }, 800);
 
     return () => clearTimeout(startProgress);
   }, []);
@@ -79,10 +75,11 @@ function App() {
             <div className="flex items-center justify-center space-x-2 text-green-400">
               <Shield className="w-5 h-5 animate-pulse" />
               <span className="font-mono text-sm">
-                {progress < 30 && "Initializing secure connection..."}
-                {progress >= 30 && progress < 60 && "Verifying security protocols..."}
-                {progress >= 60 && progress < 90 && "Authenticating access..."}
-                {progress >= 90 && "Finalizing verification..."}
+                {progress < 25 && "Initializing secure connection..."}
+                {progress >= 25 && progress < 50 && "Scanning network parameters..."}
+                {progress >= 50 && progress < 75 && "Verifying security protocols..."}
+                {progress >= 75 && progress < 95 && "Authenticating access..."}
+                {progress >= 95 && "Finalizing security check..."}
               </span>
             </div>
           </div>
@@ -161,12 +158,12 @@ function App() {
             
             {/* Prominent IP Display */}
             {visitorData?.ip_address && (
-              <div className="bg-red-500/20 border-2 border-red-500 rounded-lg p-6 max-w-md mx-auto">
-                <div className="flex items-center justify-center space-x-3 mb-2">
+              <div className="bg-red-500/20 border-2 border-red-500 rounded-lg p-6 max-w-md mx-auto animate-pulse">
+                <div className="flex items-center justify-center space-x-3 mb-3">
                   <Network className="w-6 h-6 text-red-400" />
                   <span className="text-red-400 font-bold text-lg">YOUR IP ADDRESS</span>
                 </div>
-                <div className="text-3xl md:text-4xl font-mono font-bold text-white bg-black/50 rounded-lg py-4 px-6">
+                <div className="text-3xl md:text-4xl font-mono font-bold text-white bg-black/50 rounded-lg py-4 px-6 border border-red-400">
                   {visitorData.ip_address}
                 </div>
                 {visitorData.city && visitorData.country && (
@@ -193,38 +190,59 @@ function App() {
 
             {/* Technical Details showing collected data */}
             <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-6 max-w-2xl mx-auto font-mono text-sm">
+              <div className="text-center mb-4">
+                <span className="text-red-400 font-bold">⚠️ CONNECTION LOGGED ⚠️</span>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                 <div>
                   <span className="text-green-400">Session ID:</span>
                   <span className="text-white ml-2">
-                    #{visitorData?.session_id || Math.random().toString(36).substr(2, 9).toUpperCase()}
+                    #{visitorData?.session_id || 'LOGGED'}
                   </span>
                 </div>
                 <div>
                   <span className="text-green-400">Timestamp:</span>
-                  <span className="text-white ml-2">{new Date().toLocaleString()}</span>
+                  <span className="text-white ml-2">
+                    {visitorData?.timestamp 
+                      ? new Date(visitorData.timestamp).toLocaleString()
+                      : new Date().toLocaleString()
+                    }
+                  </span>
                 </div>
                 <div>
                   <span className="text-green-400">Browser:</span>
                   <span className="text-white ml-2">
                     {visitorData?.user_agent?.includes('Chrome') ? 'Chrome' :
                      visitorData?.user_agent?.includes('Firefox') ? 'Firefox' :
-                     visitorData?.user_agent?.includes('Safari') ? 'Safari' : 'Detected'}
+                     visitorData?.user_agent?.includes('Safari') ? 'Safari' :
+                     visitorData?.user_agent?.includes('Edge') ? 'Edge' : 'DETECTED'}
                   </span>
                 </div>
                 <div>
                   <span className="text-green-400">Screen:</span>
                   <span className="text-white ml-2">
-                    {visitorData?.screen_resolution || 'Captured'}
+                    {visitorData?.screen_resolution || 'CAPTURED'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-green-400">Timezone:</span>
+                  <span className="text-white ml-2">
+                    {visitorData?.timezone || 'TRACKED'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-green-400">Referrer:</span>
+                  <span className="text-white ml-2">
+                    {visitorData?.referrer || 'LOGGED'}
                   </span>
                 </div>
                 <div>
                   <span className="text-green-400">Status:</span>
-                  <span className="text-red-400 ml-2">FLAGGED</span>
+                  <span className="text-red-400 ml-2 font-bold">FLAGGED</span>
                 </div>
                 <div>
                   <span className="text-green-400">Action:</span>
-                  <span className="text-yellow-400 ml-2">REPORTED</span>
+                  <span className="text-yellow-400 ml-2 font-bold">REPORTED</span>
                 </div>
               </div>
             </div>
@@ -239,6 +257,8 @@ function App() {
 
             <p className="text-slate-400 text-xs max-w-xl mx-auto">
               Connection logged at {new Date().toLocaleString()} • Session tracked • Authorities notified
+              <br />
+              <span className="text-red-300">Evidence collected and stored for legal proceedings</span>
             </p>
           </div>
         </div>

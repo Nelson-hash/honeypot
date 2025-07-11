@@ -1,28 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Eye, AlertTriangle } from 'lucide-react';
+import { Shield, Eye, AlertTriangle, Network } from 'lucide-react';
+import { logVisitor, type VisitorLog } from './lib/supabase';
 
 function App() {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [showFinalMessage, setShowFinalMessage] = useState(false);
+  const [visitorData, setVisitorData] = useState<VisitorLog | null>(null);
+  const [ipCollected, setIpCollected] = useState(false);
 
   useEffect(() => {
-    // Simulate loading progress
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setLoading(false);
-            setTimeout(() => setShowFinalMessage(true), 500);
-          }, 1000);
-          return 100;
+    // Start IP collection immediately when component mounts
+    const collectVisitorData = async () => {
+      try {
+        const result = await logVisitor();
+        if (result.success && result.data) {
+          setVisitorData(result.data);
+          setIpCollected(true);
+          console.log('✅ Visitor data collected:', result.data);
+        } else {
+          console.error('❌ Failed to collect visitor data:', result.error);
         }
-        return prev + Math.random() * 15;
-      });
-    }, 200);
+      } catch (error) {
+        console.error('❌ Error collecting visitor data:', error);
+      }
+    };
 
-    return () => clearInterval(interval);
+    collectVisitorData();
+  }, []);
+
+  useEffect(() => {
+    // Start progress animation after a short delay
+    const startProgress = setTimeout(() => {
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+              setLoading(false);
+              setTimeout(() => setShowFinalMessage(true), 500);
+            }, 1000);
+            return 100;
+          }
+          return prev + Math.random() * 12;
+        });
+      }, 300);
+
+      return () => clearInterval(interval);
+    }, 500);
+
+    return () => clearTimeout(startProgress);
   }, []);
 
   if (loading) {
@@ -42,12 +69,15 @@ function App() {
           {/* Loading Text */}
           <div className="space-y-4">
             <h1 className="text-2xl md:text-3xl font-bold text-white">
-              Documents Loading
+              Document Security Portal
             </h1>
             <div className="flex items-center justify-center space-x-2 text-green-400">
               <Shield className="w-5 h-5 animate-pulse" />
               <span className="font-mono text-sm">
-                Verifying security protocols...
+                {progress < 30 && "Initializing secure connection..."}
+                {progress >= 30 && progress < 60 && "Verifying security protocols..."}
+                {progress >= 60 && progress < 90 && "Authenticating access..."}
+                {progress >= 90 && "Finalizing verification..."}
               </span>
             </div>
           </div>
@@ -61,15 +91,31 @@ function App() {
               ></div>
             </div>
             <div className="flex justify-between text-xs text-slate-400 mt-2 font-mono">
-              <span>Initializing...</span>
+              <span>Processing...</span>
               <span>{Math.floor(progress)}% Complete</span>
             </div>
           </div>
 
+          {/* Network Analysis Indicators */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-center space-x-4 text-yellow-500 opacity-50">
+              <Network className="w-4 h-4" />
+              <span className="text-xs font-mono">Network Analysis Active</span>
+              <Eye className="w-4 h-4" />
+            </div>
+            
+            {ipCollected && (
+              <div className="flex items-center justify-center space-x-2 text-green-400 opacity-75">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs font-mono">Connection Logged</span>
+              </div>
+            )}
+          </div>
+
           {/* Subtle warning indicators */}
-          <div className="flex items-center justify-center space-x-4 text-yellow-500 opacity-50">
-            <Eye className="w-4 h-4" />
-            <span className="text-xs font-mono">Network Analysis Active</span>
+          <div className="flex items-center justify-center space-x-4 text-orange-500 opacity-30">
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-xs font-mono">Fraud Detection: Active</span>
             <AlertTriangle className="w-4 h-4" />
           </div>
         </div>
@@ -80,7 +126,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 flex items-center justify-center">
       <div className="text-center space-y-8 px-4">
-        {/* Big Smile */}
+        {/* Big Warning Message */}
         <div className={`transition-all duration-1000 ${showFinalMessage ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
           {/* Pixelated Skull */}
           <div className="mb-8 flex justify-center">
@@ -121,12 +167,29 @@ function App() {
               </p>
             </div>
 
-            {/* Technical Details (fake but scary) */}
+            {/* Technical Details showing collected data */}
             <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-6 max-w-2xl mx-auto font-mono text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                 <div>
+                  <span className="text-green-400">IP Address:</span>
+                  <span className="text-white ml-2">
+                    {visitorData?.ip_address || 'Logged'}
+                  </span>
+                </div>
+                <div>
                   <span className="text-green-400">Session ID:</span>
-                  <span className="text-white ml-2">#{Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
+                  <span className="text-white ml-2">
+                    #{visitorData?.session_id || Math.random().toString(36).substr(2, 9).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-green-400">Location:</span>
+                  <span className="text-white ml-2">
+                    {visitorData?.city && visitorData?.country 
+                      ? `${visitorData.city}, ${visitorData.country}`
+                      : 'Tracked'
+                    }
+                  </span>
                 </div>
                 <div>
                   <span className="text-green-400">Timestamp:</span>
@@ -143,9 +206,16 @@ function App() {
               </div>
             </div>
 
-            <p className="text-slate-300 text-sm max-w-xl mx-auto">
-              This is a honeypot designed to deter fraudulent activities. 
-              If you're here legitimately, please disregard this message.
+            <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4 max-w-xl mx-auto">
+              <p className="text-yellow-200 text-sm">
+                ⚠️ <strong>Legal Notice:</strong> This is a honeypot designed to deter fraudulent activities. 
+                If you're here legitimately, please disregard this message. All data collection 
+                complies with applicable privacy laws.
+              </p>
+            </div>
+
+            <p className="text-slate-400 text-xs max-w-xl mx-auto">
+              Detected suspicious activity patterns. Connection details have been logged for security analysis.
             </p>
           </div>
         </div>

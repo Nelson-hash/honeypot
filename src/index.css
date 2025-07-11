@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.pixelated-skull {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.5));
+  animation: skull-glow 2s ease-in-out infinite alternate;
+}
+
+.skull-row {
+  display: flex;
+  height: 8px;
+  margin: 1px 0;
+}
+
+.skull-row::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 0 1px;
+  background-color: transparent;
+}
+
+/* Skull pattern using box-shadow for pixels */
+.skull-row-1::before { box-shadow: 32px 0 #ef4444, 40px 0 #ef4444, 48px 0 #ef4444, 56px 0 #ef4444, 64px 0 #ef4444, 72px 0 #ef4444; }
+.skull-row-2::before { box-shadow: 24px 0 #ef4444, 32px 0 #ef4444, 40px 0 #ef4444, 48px 0 #ef4444, 56px 0 #ef4444, 64px 0 #ef4444, 72px 0 #ef4444, 80px 0 #ef4444; }
+.skull-row-3::before { box-shadow: 16px 0 #ef4444, 24px 0 #ef4444, 32px 0 #ef4444, 40px 0 #ef4444, 48px 0 #ef4444, 56px 0 #ef4444, 64px 0 #ef4444, 72px 0 #ef4444, 80px 0 #ef4444, 88px 0 #ef4444; }
+.skull-row-4::before { box-shadow: 16px 0 #ef4444, 24px 0 #ef4444, 32px 0 #000000, 40px 0 #ef4444, 48px 0 #ef4444, 56px 0 #ef4444, 64px 0 #000000, 72px 0 #ef4444, 80px 0 #ef4444, 88px 0 #ef4444; }
+.skull-row-5::before { box-shadow: 16px 0 #ef4444, 24px 0 #000000, 32px 0 #000000, 40px 0 #ef4444, 48px 0 #ef4444, 56px 0 #ef4444, 64px 0 #000000, 72px 0 #000000, 80px 0 #ef4444, 88px 0 #ef4444; }
+.skull-row-6::before { box-shadow: 16px 0 #ef4444, 24px 0 #000000, 32px 0 #000000, 40px 0 #ef4444, 48px 0 #ef4444, 56px 0 #ef4444, 64px 0 #000000, 72px 0 #000000, 80px 0 #ef4444, 88px 0 #ef4444; }
+.skull-row-7::before { box-shadow: 16px 0 #ef4444, 24px 0 #ef4444, 32px 0 #ef4444, 40px 0 #ef4444, 48px 0 #000000, 56px 0 #ef4444, 64px 0 #ef4444, 72px 0 #ef4444, 80px 0 #ef4444, 88px 0 #ef4444; }
+.skull-row-8::before { box-shadow: 16px 0 #ef4444, 24px 0 #ef4444, 32px 0 #ef4444, 40px 0 #000000, 48px 0 #000000, 56px 0 #000000, 64px 0 #ef4444, 72px 0 #ef4444, 80px 0 #ef4444, 88px 0 #ef4444; }
+.skull-row-9::before { box-shadow: 16px 0 #ef4444, 24px 0 #ef4444, 32px 0 #000000, 40px 0 #ef4444, 48px 0 #000000, 56px 0 #ef4444, 64px 0 #000000, 72px 0 #ef4444, 80px 0 #ef4444, 88px 0 #ef4444; }
+.skull-row-10::before { box-shadow: 16px 0 #ef4444, 24px 0 #000000, 32px 0 #ef4444, 40px 0 #000000, 48px 0 #000000, 56px 0 #000000, 64px 0 #ef4444, 72px 0 #000000, 80px 0 #ef4444, 88px 0 #ef4444; }
+.skull-row-11::before { box-shadow: 24px 0 #ef4444, 32px 0 #000000, 40px 0 #000000, 48px 0 #000000, 56px 0 #000000, 64px 0 #000000, 72px 0 #000000, 80px 0 #ef4444; }
+.skull-row-12::before { box-shadow: 32px 0 #ef4444, 40px 0 #ef4444, 48px 0 #ef4444, 56px 0 #ef4444, 64px 0 #ef4444, 72px 0 #ef4444; }
+
+@keyframes skull-glow {
+  0% { filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.5)); }
+  100% { filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.8)); }
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Eye, AlertTriangle, Network, MapPin } from 'lucide-react';
+import { Shield, AlertTriangle, Network, MapPin } from 'lucide-react';
 
 // Environment variables
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
@@ -91,7 +91,6 @@ function getVisitorInfo(): Partial<VisitorData> {
   return {
     session_id: sessionId,
     user_agent: navigator.userAgent,
-    referrer: document.referrer || 'Direct',
     screen_resolution: `${screen.width}x${screen.height}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   }
@@ -282,21 +281,7 @@ function App() {
             </div>
           </div>
 
-          {/* Network Analysis Indicators */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-center space-x-4 text-yellow-500 opacity-50">
-              <Network className="w-4 h-4" />
-              <span className="text-xs font-mono">Network Analysis Active</span>
-              <Eye className="w-4 h-4" />
-            </div>
-            
-            {ipCollected && (
-              <div className="flex items-center justify-center space-x-2 text-green-400 opacity-75">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-xs font-mono">IP Address Captured</span>
-              </div>
-            )}
-          </div>
+
 
           {/* Subtle warning indicators */}
           <div className="flex items-center justify-center space-x-4 text-orange-500 opacity-30">
@@ -412,12 +397,6 @@ function App() {
                   <span className="text-green-400">Timezone:</span>
                   <span className="text-white ml-2">
                     {visitorData?.timezone || 'TRACKED'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-green-400">Referrer:</span>
-                  <span className="text-white ml-2">
-                    {visitorData?.referrer || 'LOGGED'}
                   </span>
                 </div>
                 <div>

@@ -4,10 +4,12 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  console.warn('Missing Supabase environment variables - running in demo mode')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
 
 export interface VisitorLog {
   id?: string
@@ -22,22 +24,22 @@ export interface VisitorLog {
   timezone?: string
 }
 
-// Function to get visitor's IP address using multiple fallback services
+// Function to get visitor's IP address using multiple services
 export async function getVisitorIP(): Promise<string | null> {
   const services = [
     'https://api.ipify.org?format=json',
     'https://ipapi.co/json/',
-    'https://ipinfo.io/json'
+    'https://api.my-ip.io/ip.json'
   ]
 
   for (const service of services) {
     try {
-      const response = await fetch(service)
+      const response = await fetch(service, { timeout: 5000 } as any)
       const data = await response.json()
       
       // Different services have different response formats
       const ip = data.ip || data.query || data.ipAddress
-      if (ip && typeof ip === 'string') {
+      if (ip && typeof ip === 'string' && ip.match(/^\d+\.\d+\.\d+\.\d+$/)) {
         return ip
       }
     } catch (error) {
@@ -100,23 +102,33 @@ export async function logVisitor(): Promise<{ success: boolean; data?: VisitorLo
       ...geoInfo
     }
     
-    // Insert into Supabase
-    const { data, error } = await supabase
-      .from('visitor_logs')
-      .insert([logData])
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error logging visitor:', error)
-      return { success: false, error: error.message }
+    // Insert into Supabase if available
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('visitor_logs')
+        .insert([logData])
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('Error logging visitor:', error)
+        return { success: false, error: error.message, data: logData }
+      }
+      
+      console.log('Visitor logged successfully:', data)
+      return { success: true, data }
+    } else {
+      // Demo mode - just return the data without saving
+      console.log('Demo mode - visitor data:', logData)
+      return { success: true, data: logData }
     }
-    
-    console.log('Visitor logged successfully:', data)
-    return { success: true, data }
     
   } catch (error) {
     console.error('Error in logVisitor:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: { ip_address: 'Error collecting IP' }
+    }
   }
 }

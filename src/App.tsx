@@ -226,12 +226,12 @@ function App() {
             }, 1000);
             return 100;
           }
-          return prev + Math.random() * 12;
+          return prev + Math.random() * 15;
         });
-      }, 300);
+      }, 120);
 
       return () => clearInterval(interval);
-    }, 800);
+    }, 320);
 
     return () => clearTimeout(startProgress);
   }, []);

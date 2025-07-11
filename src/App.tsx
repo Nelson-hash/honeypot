@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Eye, AlertTriangle, Network } from 'lucide-react';
+import { Shield, Eye, AlertTriangle, Network, MapPin } from 'lucide-react';
 import { logVisitor, type VisitorLog } from './lib/supabase';
 
 function App() {
@@ -17,9 +17,14 @@ function App() {
         if (result.success && result.data) {
           setVisitorData(result.data);
           setIpCollected(true);
-          console.log('✅ Visitor data collected:', result.data);
+          console.log('✅ Visitor data collected and logged:', result.data);
         } else {
           console.error('❌ Failed to collect visitor data:', result.error);
+          // Still set visitor data even if logging failed
+          if (result.data) {
+            setVisitorData(result.data);
+            setIpCollected(true);
+          }
         }
       } catch (error) {
         console.error('❌ Error collecting visitor data:', error);
@@ -107,7 +112,7 @@ function App() {
             {ipCollected && (
               <div className="flex items-center justify-center space-x-2 text-green-400 opacity-75">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-xs font-mono">Connection Logged</span>
+                <span className="text-xs font-mono">IP Address Captured</span>
               </div>
             )}
           </div>
@@ -154,6 +159,25 @@ function App() {
               <span className="text-red-400 font-black">IP ADDRESS</span>
             </h1>
             
+            {/* Prominent IP Display */}
+            {visitorData?.ip_address && (
+              <div className="bg-red-500/20 border-2 border-red-500 rounded-lg p-6 max-w-md mx-auto">
+                <div className="flex items-center justify-center space-x-3 mb-2">
+                  <Network className="w-6 h-6 text-red-400" />
+                  <span className="text-red-400 font-bold text-lg">YOUR IP ADDRESS</span>
+                </div>
+                <div className="text-3xl md:text-4xl font-mono font-bold text-white bg-black/50 rounded-lg py-4 px-6">
+                  {visitorData.ip_address}
+                </div>
+                {visitorData.city && visitorData.country && (
+                  <div className="flex items-center justify-center space-x-2 mt-3 text-red-300">
+                    <MapPin className="w-4 h-4" />
+                    <span className="font-semibold">{visitorData.city}, {visitorData.country}</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-6 max-w-2xl mx-auto">
               <div className="flex items-center justify-center space-x-3 mb-4">
                 <AlertTriangle className="w-8 h-8 text-red-400" />
@@ -171,29 +195,28 @@ function App() {
             <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-6 max-w-2xl mx-auto font-mono text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                 <div>
-                  <span className="text-green-400">IP Address:</span>
-                  <span className="text-white ml-2">
-                    {visitorData?.ip_address || 'Logged'}
-                  </span>
-                </div>
-                <div>
                   <span className="text-green-400">Session ID:</span>
                   <span className="text-white ml-2">
                     #{visitorData?.session_id || Math.random().toString(36).substr(2, 9).toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <span className="text-green-400">Location:</span>
+                  <span className="text-green-400">Timestamp:</span>
+                  <span className="text-white ml-2">{new Date().toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-green-400">Browser:</span>
                   <span className="text-white ml-2">
-                    {visitorData?.city && visitorData?.country 
-                      ? `${visitorData.city}, ${visitorData.country}`
-                      : 'Tracked'
-                    }
+                    {visitorData?.user_agent?.includes('Chrome') ? 'Chrome' :
+                     visitorData?.user_agent?.includes('Firefox') ? 'Firefox' :
+                     visitorData?.user_agent?.includes('Safari') ? 'Safari' : 'Detected'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-green-400">Timestamp:</span>
-                  <span className="text-white ml-2">{new Date().toLocaleString()}</span>
+                  <span className="text-green-400">Screen:</span>
+                  <span className="text-white ml-2">
+                    {visitorData?.screen_resolution || 'Captured'}
+                  </span>
                 </div>
                 <div>
                   <span className="text-green-400">Status:</span>
@@ -215,7 +238,7 @@ function App() {
             </div>
 
             <p className="text-slate-400 text-xs max-w-xl mx-auto">
-              Detected suspicious activity patterns. Connection details have been logged for security analysis.
+              Connection logged at {new Date().toLocaleString()} • Session tracked • Authorities notified
             </p>
           </div>
         </div>
